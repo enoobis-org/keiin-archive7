@@ -1,0 +1,44 @@
+################
+Table: locations
+################
+id   || Primary	 int ||  AUTO_INCREMENT	
+img  ||	text	|| utf8mb4_general_ci	||
+name ||	text	|| utf8mb4_general_ci	||	
+//////////////////
+
+################
+Table: packages
+################ 
+id    ||    Primary	int ||	AUTO_INCREMENT
+img   ||	text	 || utf8mb4_general_ci	
+price ||	float	 ||
+//////////////////
+
+################ 
+Table: services
+################ 
+id  ||  Primary int ||	AUTO_INCREMENT	
+img ||	text ||	utf8mb4_general_ci		
+srv ||	text ||	utf8mb4_general_ci			
+txt ||	text ||	utf8mb4_general_ci	
+//////////////////
+
+################ 
+Table: slider
+################ 
+id  || Primary	int	 ||		AUTO_INCREMENT	
+img ||	text	 || utf8mb4_general_ci
+//////////////////
+
+################ 
+Table: users
+################ 
+id       || Primary	int  ||	AUTO_INCREMENT	
+login    ||	text  ||    utf8mb4_general_ci		
+password ||	text  ||	utf8mb4_general_ci	
+//////////////////
+
+
+
+C:\wamp64\www\kgtrip\css\admin.css
+C:\wamp64\www\kgtrip\css\login.css

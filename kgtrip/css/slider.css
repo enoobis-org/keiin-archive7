@@ -1,0 +1,75 @@
+/* Slider container styling */
+.slider-container-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.swiffy-slider .slider-container {
+    max-width: 100%; 
+    border-radius: 20px;
+    overflow: hidden; 
+}
+
+.swiffy-slider img {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    height: 500px; 
+    object-fit: cover;
+    border-radius: 20px; 
+}
+
+/* Centering the arrow navigation */
+.slider-nav {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.5); /* Minimal, semi-transparent background */
+    color: white;
+    display: flex;
+    justify-content: center; /* Horizontally center the arrow */
+    align-items: center; /* Vertically center the arrow */
+    position: absolute;
+    top: 50%; /* Vertically centered */
+    transform: translateY(-50%); /* Correct vertical centering */
+    z-index: 10;
+    border-radius: 50%; /* Keep the button rounded */
+    pointer-events: all; /* Ensure the button is clickable */
+    line-height: 0; /* Remove extra spacing within the button */
+}
+
+/* Arrow styling */
+.slider-nav::before {
+    content: '>'; /* Default right arrow */
+    font-size: 20px; /* Keep arrow size clean */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Ensure the arrow uses the full button width */
+    height: 100%; /* Ensure the arrow uses the full button height */
+    line-height: 1; /* Prevent extra spacing around the arrow */
+}
+
+/* Left arrow */
+.slider-nav-prev::before {
+    content: '<'; /* Change arrow for previous */
+}
+
+/* Position arrows */
+.slider-nav-prev {
+    left: 10px; 
+}
+
+.slider-nav-next {
+    right: 10px;
+}
+
+/* Prevent any accidental duplicate pseudo-element content */
+.slider-nav::after {
+    content: none; /* Ensure there's no '::after' content adding an extra arrow */
+}
