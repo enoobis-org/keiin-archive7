@@ -229,7 +229,7 @@ nav ul li a {
   padding: 25px;
   padding-right: 50px;
   display: flex;
-  background: linear-gradient(#445056, #47addd 45%, #fff 45%, #fff 100%);
+  background: linear-gradient(#30ff33, #3037ff 45%, #fff 45%, #fff 100%);
   box-shadow: 10px 10px 15px #3b3737;
   margin-top: 5px;
   margin-left: 149px;
@@ -243,7 +243,7 @@ nav ul li a {
   padding: 25px;
   padding-right: 50px;
   display: flex;
-  background: linear-gradient(#445056, #47addd 45%, #fff 45%, #fff 100%);
+  background: linear-gradient(#445056, #ffffff 45%, #fff 45%, #fff 100%);
   box-shadow: 10px 10px 15px #3b3737;
   margin-top: 5px;
   margin-left: 149px;
@@ -707,4 +707,33 @@ form textarea {
   color: #191919;
   font-weight: 600px;
   background-color: transparent;
+}
+
+
+.main-header {
+  position: fixed; /* фиксирует header на экране */
+  top: 0;
+  left: 0;
+  width: 100%; /* header занимает всю ширину экрана */
+  z-index: 1000; /* высокий z-index, чтобы быть поверх других элементов */
+  background-color: white; /* фоновый цвет, чтобы отличить от контента */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* тень для визуального отделения от контента */
+  padding: 10px 0; /* отступы сверху и снизу */
+}
+
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  z-index: 10000; /* Highest priority */
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 10px 0;
+}
+
+.country-button {
+  position: relative;
+  z-index: 1; /* Lower than nav */
 }

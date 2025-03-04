@@ -101,6 +101,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && (isset($_POST['add_item']) || isset(
     exit();
 }
 
+// Handle file upload for 'upload' tab
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['upload']) && isset($_FILES['fileToUpload'])) {
+    $targetDirectory = '../assets/files/';
+    $targetFile = $targetDirectory . basename($_FILES['fileToUpload']['name']);
+    $uploadOk = 1;
+    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+    // Check if file is an actual image
+    $check = getimagesize($_FILES['fileToUpload']['tmp_name']);
+    if ($check === false) {
+        echo "File is not an image.";
+        $uploadOk = 0;
+    }
+
+    // Check if file already exists
+    if (file_exists($targetFile)) {
+        echo "File already exists.";
+        $uploadOk = 0;
+    }
+
+    // Limit file size (optional)
+    if ($_FILES['fileToUpload']['size'] > 5000000) {
+        echo "File is too large.";
+        $uploadOk = 0;
+    }
+
+    // Allow specific file formats
+    if (!in_array($imageFileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+        echo "Only JPG, JPEG, PNG, and GIF files are allowed.";
+        $uploadOk = 0;
+    }
+
+    // Try to upload if all checks pass
+    if ($uploadOk) {
+        if (move_uploaded_file($_FILES['fileToUpload']['tmp_name'], $targetFile)) {
+            echo "File ". htmlspecialchars(basename($_FILES['fileToUpload']['name'])). " has been uploaded.";
+        } else {
+            echo "Error uploading your file.";
+        }
+    }
+}
+
 // Fetch a single item for editing if needed
 $itemToEdit = null;
 if (isset($_GET['edit']) && isset($_GET['tab'])) {
@@ -110,6 +152,106 @@ if (isset($_GET['edit']) && isset($_GET['tab'])) {
     $stmt->execute(['id' => $id]);
     $itemToEdit = $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+// Function to get image files from assets directory
+function getImageFiles() {
+    $directory = '../assets/files/';
+    $files = array_diff(scandir($directory), array('.', '..'));
+    $imageFiles = [];
+    foreach ($files as $file) {
+        if (preg_match('/\.(jpg|jpeg|png|gif)$/i', $file)) {
+            $imageFiles[] = $file;
+        }
+    }
+    return $imageFiles;
+}
+// ------------
+// countries 
+// ------------
+
+if (isset($_GET['tab']) && $_GET['tab'] == 'cont') {
+    // Определить, какая таблица используется
+    $table = $_GET['table'] ?? 'ncountries';
+
+    // Загрузка данных из базы
+    if ($table == 'ncountries') {
+        $sql = "SELECT * FROM ncountries";
+    } elseif ($table == 'icountries') {
+        $sql = "SELECT ic.id, ic.img, ic.txt, n.name AS nc_name 
+                FROM icountries ic 
+                JOIN ncountries n ON ic.nc_id = n.id";
+    } else {
+        $sql = "SELECT * FROM ncountries"; // По умолчанию
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Удаление записи
+    if (isset($_GET['delete'])) {
+        $id = $_GET['delete'];
+        if ($table == 'ncountries') {
+            // Удалить связанные записи в icountries
+            $stmt = $pdo->prepare("DELETE FROM icountries WHERE nc_id = :id");
+            $stmt->execute(['id' => $id]);
+        }
+        $stmt = $pdo->prepare("DELETE FROM $table WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        header("Location: admin.php?tab=cont&table=$table");
+        exit();
+    }
+
+    // Копирование записи
+    if (isset($_GET['copy'])) {
+        $id = $_GET['copy'];
+        if ($table == 'ncountries') {
+            $stmt = $pdo->prepare("INSERT INTO ncountries (name) SELECT name FROM ncountries WHERE id = :id");
+        } elseif ($table == 'icountries') {
+            $stmt = $pdo->prepare("INSERT INTO icountries (img, txt, nc_id) SELECT img, txt, nc_id FROM icountries WHERE id = :id");
+        }
+        $stmt->execute(['id' => $id]);
+        header("Location: admin.php?tab=cont&table=$table");
+        exit();
+    }
+
+    // Добавление/изменение записи
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($table == 'ncountries') {
+            $name = $_POST['name'];
+            if (isset($_POST['add_item'])) {
+                $stmt = $pdo->prepare("INSERT INTO ncountries (name) VALUES (:name)");
+                $stmt->execute(['name' => $name]);
+            } elseif (isset($_POST['edit_item'])) {
+                $id = $_POST['id'];
+                $stmt = $pdo->prepare("UPDATE ncountries SET name = :name WHERE id = :id");
+                $stmt->execute(['name' => $name, 'id' => $id]);
+            }
+        } elseif ($table == 'icountries') {
+            $img = $_POST['img'];
+            $txt = $_POST['txt'];
+            $nc_id = $_POST['nc_id'];
+            // Проверка существования записи в ncountries
+            $stmt = $pdo->prepare("SELECT id FROM ncountries WHERE id = :id");
+            $stmt->execute(['id' => $nc_id]);
+            if ($stmt->rowCount() == 0) {
+                echo "Ошибка: Сначала создайте запись в ncountries.";
+                exit();
+            }
+            if (isset($_POST['add_item'])) {
+                $stmt = $pdo->prepare("INSERT INTO icountries (img, txt, nc_id) VALUES (:img, :txt, :nc_id)");
+                $stmt->execute(['img' => $img, 'txt' => $txt, 'nc_id' => $nc_id]);
+            } elseif (isset($_POST['edit_item'])) {
+                $id = $_POST['id'];
+                $stmt = $pdo->prepare("UPDATE icountries SET img = :img, txt = :txt, nc_id = :nc_id WHERE id = :id");
+                $stmt->execute(['img' => $img, 'txt' => $txt, 'nc_id' => $nc_id, 'id' => $id]);
+            }
+        }
+        header("Location: admin.php?tab=cont&table=$table");
+        exit();
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -128,6 +270,8 @@ if (isset($_GET['edit']) && isset($_GET['tab'])) {
         <a href="admin.php?tab=packages"><img src="../assets/files/package.png" alt="Packages Icon"> Пакеты</a>
         <a href="admin.php?tab=locations"><img src="../assets/files/mountains.png" alt="Locations Icon"> Локации</a>
         <a href="admin.php?tab=slider"><img src="../assets/files/slider.png" alt="Slider Icon"> Слайдер</a>
+        <a href="admin.php?tab=cont"><img src="../assets/files/cont.png" alt="Countries Icon"> Страны</a>
+        <a href="admin.php?tab=upload"><img src="../assets/files/upload.png" alt="Upload Icon"> Загрузить</a>
         <a href="../" class="logout"><img src="../assets/files/exit.png" alt="Logout Icon"> Выход</a>
     </div>
 
@@ -144,8 +288,19 @@ if (isset($_GET['edit']) && isset($_GET['tab'])) {
         ?>
             <h1><?= $formTitle ?></h1>
             <form action="admin.php?tab=<?= $_GET['tab']; ?>&action=add" method="POST">
-                <label for="img">Изображение:</label>
-                <input type="text" name="img" id="img" placeholder="Введите путь к изображению" required>
+                <?php if ($_GET['tab'] == 'slider'): ?>
+                    <label for="img">Изображение:</label>
+                    <select name="img" id="img" required>
+                        <option value="">Выберите изображение</option>
+                        <?php foreach (getImageFiles() as $file): ?>
+                            <option value="<?= "assets/files/$file"; ?>"><?= $file; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <label for="img">Изображение:</label>
+                    <input type="text" name="img" id="img" placeholder="Введите путь к изображению" required>
+                <?php endif; ?>
+
                 <?php if ($_GET['tab'] == 'services'): ?>
                     <label for="srv">Название Сервиса:</label>
                     <input type="text" name="srv" id="srv" placeholder="Введите название сервиса" required>
@@ -241,6 +396,16 @@ if (isset($_GET['edit']) && isset($_GET['tab'])) {
             <a href="admin.php?tab=<?= $_GET['tab']; ?>&action=add" class="add-btn-center">Добавить</a>
         <?php
             }
+        } elseif (isset($_GET['tab']) && $_GET['tab'] == 'upload') {
+            // Display the file upload form
+        ?>
+            <h1>Загрузить файл</h1>
+            <form action="admin.php?tab=upload" method="POST" enctype="multipart/form-data">
+                <label for="fileToUpload">Выберите файл для загрузки:</label>
+                <input type="file" name="fileToUpload" id="fileToUpload" required>
+                <button type="submit" name="upload" class="add-btn">Загрузить</button>
+            </form>
+        <?php
         } else {
             // Default content when 'Главная' is selected
         ?>
@@ -252,3 +417,5 @@ if (isset($_GET['edit']) && isset($_GET['tab'])) {
     </div>
 </body>
 </html>
+
+
